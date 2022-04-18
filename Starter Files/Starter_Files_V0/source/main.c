@@ -82,40 +82,73 @@
  */
 static void prvSetupHardware( void );
 
+uint16_t global_Counter=0;
+
+uint8_t pinState=PIN_IS_HIGH;
+
 TaskHandle_t xToggleHandle_100ms=NULL;
 
 void ledToggle_100ms(void *pvParameters)
 {
    while(1)
    {
-   GPIO_write(PORT_0,PIN1,PIN_IS_HIGH);
-   vTaskDelay(100);
-   GPIO_write(PORT_0,PIN1,PIN_IS_LOW);
-   vTaskDelay(100);
+      if((global_Counter>=400)&&(pinState==PIN_IS_HIGH))
+      {
+         GPIO_write(PORT_0,PIN1,PIN_IS_HIGH);
+         vTaskDelay(100);
+         GPIO_write(PORT_0,PIN1,PIN_IS_LOW);
+         vTaskDelay(100);  
+      }
+      else
+      {
+         vTaskDelay(10);
+      }
    }
 }
-TaskHandle_t xToggleHandle_500ms=NULL;
+TaskHandle_t xToggleHandle_400ms=NULL;
 
-void ledToggle_500ms(void *pvParameters)
+void ledToggle_400ms(void *pvParameters)
 {
    while(1)
    {
-   GPIO_write(PORT_0,PIN2,PIN_IS_HIGH);
-   vTaskDelay(500);
-   GPIO_write(PORT_0,PIN2,PIN_IS_LOW);
-   vTaskDelay(500);
+   if((global_Counter>=200)&&(global_Counter<400)&&(pinState==PIN_IS_HIGH))
+      {
+         GPIO_write(PORT_0,PIN2,PIN_IS_HIGH);
+         vTaskDelay(400);
+         GPIO_write(PORT_0,PIN2,PIN_IS_LOW);
+         vTaskDelay(400);  
+      }
+      else
+      {
+         vTaskDelay(10);
+      }
    }
 }
-TaskHandle_t xToggleHandle_1000ms=NULL;
+TaskHandle_t xPbHandle=NULL;
 
-void ledToggle_1000ms(void *pvParameters)
+void PbPoll_Task (void *pvParameters)
 {
+   static uint16_t locCounter=0;
    while(1)
    {
-   GPIO_write(PORT_0,PIN3,PIN_IS_HIGH);
-   vTaskDelay(1000);
-   GPIO_write(PORT_0,PIN3,PIN_IS_LOW);
-   vTaskDelay(1000);
+     pinState=GPIO_read(PORT_0,PIN0);
+     if(pinState==PIN_IS_LOW)
+     {
+        locCounter++;
+        vTaskDelay(10);
+     }
+     else
+     {
+        if(locCounter==0)
+        {
+           vTaskDelay(10);
+        }
+        else
+        {
+           global_Counter=locCounter;
+           locCounter=0;
+        }
+     }
    }
 }
 /*-----------------------------------------------------------*/
@@ -133,8 +166,8 @@ int main( void )
 	
     /* Create Tasks here */
    xTaskCreate(ledToggle_100ms,"Toggle Led 100",20,(void *)(0),1,&xToggleHandle_100ms);
-   xTaskCreate(ledToggle_500ms,"Toggle Led 500",20,(void *)(0),1,&xToggleHandle_500ms);
-   xTaskCreate(ledToggle_1000ms,"Toggle Led 1000",20,(void *)(0),1,&xToggleHandle_1000ms);
+   xTaskCreate(ledToggle_400ms,"Toggle Led 400",20,(void *)(0),1,&xToggleHandle_400ms);
+   xTaskCreate(PbPoll_Task,"Push Button Poll Task",100,(void *)(0),2,&xPbHandle);
 	/* Now all the tasks have been started - start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
