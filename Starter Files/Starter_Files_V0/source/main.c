@@ -82,39 +82,15 @@
  */
 static void prvSetupHardware( void );
 
-TaskHandle_t xToggleHandle_100ms=NULL;
+TaskHandle_t xToggleHandle=NULL;
 
-void ledToggle_100ms(void *pvParameters)
+void ledToggle(void *pvParameters)
 {
    while(1)
    {
    GPIO_write(PORT_0,PIN1,PIN_IS_HIGH);
-   vTaskDelay(100);
-   GPIO_write(PORT_0,PIN1,PIN_IS_LOW);
-   vTaskDelay(100);
-   }
-}
-TaskHandle_t xToggleHandle_500ms=NULL;
-
-void ledToggle_500ms(void *pvParameters)
-{
-   while(1)
-   {
-   GPIO_write(PORT_0,PIN2,PIN_IS_HIGH);
-   vTaskDelay(500);
-   GPIO_write(PORT_0,PIN2,PIN_IS_LOW);
-   vTaskDelay(500);
-   }
-}
-TaskHandle_t xToggleHandle_1000ms=NULL;
-
-void ledToggle_1000ms(void *pvParameters)
-{
-   while(1)
-   {
-   GPIO_write(PORT_0,PIN3,PIN_IS_HIGH);
    vTaskDelay(1000);
-   GPIO_write(PORT_0,PIN3,PIN_IS_LOW);
+   GPIO_write(PORT_0,PIN1,PIN_IS_LOW);
    vTaskDelay(1000);
    }
 }
@@ -132,9 +108,7 @@ int main( void )
 
 	
     /* Create Tasks here */
-   xTaskCreate(ledToggle_100ms,"Toggle Led 100",20,(void *)(0),1,&xToggleHandle_100ms);
-   xTaskCreate(ledToggle_500ms,"Toggle Led 500",20,(void *)(0),1,&xToggleHandle_500ms);
-   xTaskCreate(ledToggle_1000ms,"Toggle Led 1000",20,(void *)(0),1,&xToggleHandle_1000ms);
+   xTaskCreate(ledToggle,"Toggle Led",20,(void *)(0),1,&xToggleHandle);
 	/* Now all the tasks have been started - start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
