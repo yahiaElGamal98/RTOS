@@ -84,7 +84,7 @@ static void prvSetupHardware( void );
 
 uint16_t global_Counter=0;
 
-uint8_t pinState=PIN_IS_HIGH;
+pinState_t pinState=PIN_IS_LOW;
 
 TaskHandle_t xToggleHandle_100ms=NULL;
 
@@ -92,7 +92,7 @@ void ledToggle_100ms(void *pvParameters)
 {
    while(1)
    {
-      if((global_Counter>=400)&&(pinState==PIN_IS_HIGH))
+      if((global_Counter>=400)&&(pinState==PIN_IS_LOW))
       {
          GPIO_write(PORT_0,PIN1,PIN_IS_HIGH);
          vTaskDelay(100);
@@ -111,11 +111,11 @@ void ledToggle_400ms(void *pvParameters)
 {
    while(1)
    {
-   if((global_Counter>=200)&&(global_Counter<400)&&(pinState==PIN_IS_HIGH))
+   if((global_Counter>=200)&&(global_Counter<400)&&(pinState==PIN_IS_LOW))
       {
-         GPIO_write(PORT_0,PIN2,PIN_IS_HIGH);
+         GPIO_write(PORT_0,PIN1,PIN_IS_HIGH);
          vTaskDelay(400);
-         GPIO_write(PORT_0,PIN2,PIN_IS_LOW);
+         GPIO_write(PORT_0,PIN1,PIN_IS_LOW);
          vTaskDelay(400);  
       }
       else
@@ -132,7 +132,7 @@ void PbPoll_Task (void *pvParameters)
    while(1)
    {
      pinState=GPIO_read(PORT_0,PIN0);
-     if(pinState==PIN_IS_LOW)
+     if(pinState==PIN_IS_HIGH)
      {
         locCounter++;
         vTaskDelay(10);
