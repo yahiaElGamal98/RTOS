@@ -84,43 +84,36 @@ static void prvSetupHardware( void );
 
 uint16_t global_Counter=0;
 
+
+
 pinState_t pinState=PIN_IS_LOW;
 
-TaskHandle_t xToggleHandle_100ms=NULL;
 
-void ledToggle_100ms(void *pvParameters)
+xSemaphoreHandle sem_buttonReleased;
+
+
+TaskHandle_t xToggleHandle=NULL;
+
+void ledToggle(void *pvParameters)
 {
    while(1)
    {
-      if((global_Counter>=400)&&(pinState==PIN_IS_LOW))
+      if(pdTRUE==xSemaphoreTake(&sem_buttonReleased,100))
       {
-         GPIO_write(PORT_0,PIN1,PIN_IS_HIGH);
-         vTaskDelay(100);
-         GPIO_write(PORT_0,PIN1,PIN_IS_LOW);
-         vTaskDelay(100);  
-      }
+         if(PIN_IS_HIGH==GPIO_read(PORT_0,PIN1))
+         {
+            GPIO_write(PORT_0,PIN1,PIN_IS_LOW);
+            vTaskDelay(100);  
+         }
+         else
+         {
+            GPIO_write(PORT_0,PIN1,PIN_IS_HIGH);
+            vTaskDelay(100);  
+         }         
+         }
       else
       {
-         vTaskDelay(10);
-      }
-   }
-}
-TaskHandle_t xToggleHandle_400ms=NULL;
-
-void ledToggle_400ms(void *pvParameters)
-{
-   while(1)
-   {
-   if((global_Counter>=200)&&(global_Counter<400)&&(pinState==PIN_IS_LOW))
-      {
-         GPIO_write(PORT_0,PIN1,PIN_IS_HIGH);
-         vTaskDelay(400);
-         GPIO_write(PORT_0,PIN1,PIN_IS_LOW);
-         vTaskDelay(400);  
-      }
-      else
-      {
-         vTaskDelay(10);
+         //do Nothing
       }
    }
 }
@@ -145,7 +138,7 @@ void PbPoll_Task (void *pvParameters)
         }
         else
         {
-           global_Counter=locCounter;
+           xSemaphoreGive(&sem_buttonReleased);
            locCounter=0;
         }
      }
@@ -165,8 +158,7 @@ int main( void )
 
 	
     /* Create Tasks here */
-   xTaskCreate(ledToggle_100ms,"Toggle Led 100",20,(void *)(0),1,&xToggleHandle_100ms);
-   xTaskCreate(ledToggle_400ms,"Toggle Led 400",20,(void *)(0),1,&xToggleHandle_400ms);
+   xTaskCreate(ledToggle,"Toggle Led",20,(void *)(0),1,&xToggleHandle);
    xTaskCreate(PbPoll_Task,"Push Button Poll Task",100,(void *)(0),2,&xPbHandle);
 	/* Now all the tasks have been started - start the scheduler.
 
