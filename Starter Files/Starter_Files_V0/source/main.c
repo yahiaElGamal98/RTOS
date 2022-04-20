@@ -82,57 +82,83 @@
  */
 static void prvSetupHardware( void );
 
-uint8_t *str_uartBuffer[2000]={0};
-uint16_t u16_elementsInBuffer;
+pinState_t pinState=PIN_IS_LOW;
 
-xSemaphoreHandle mutex_UartBuffer;
+xQueueHandle xUartQueue;
 
-TaskHandle_t xUART_task_1_Handle=NULL;
+TaskHandle_t xPb_1_Handle=NULL;
 
-void UART_task_1(void *pvParameters)
+void PbPoll_1_Task (void *pvParameters)
 {
-   uint8_t iter;
+   static uint16_t locCounter=0;
    while(1)
    {
-      if(pdTRUE==xSemaphoreTake(&mutex_UartBuffer,100))
-      {
-         for(iter=0;iter<10;iter++)
-         {
-            str_uartBuffer[u16_elementsInBuffer++]=(uint8_t *)"Task 1 String";            
-         }
-         xSemaphoreGive(&mutex_UartBuffer);
-         vTaskDelay((TickType_t)100);
-      }
-      else
-      {
-         //do Nothing
-      }
+     pinState=GPIO_read(PORT_0,PIN0);
+     if((pinState==PIN_IS_HIGH)&&(locCounter==0))
+     {
+        xQueueSend(&xUartQueue, "Positive Edge Detected");
+        locCounter++;
+        vTaskDelay(10);
+     }
+     else if((pinState==PIN_IS_LOW)&&(locCounter!=0))
+     {
+        xQueueSend(&xUartQueue, "Negative Edge Detected");
+        locCounter=0;
+        vTaskDelay(10);
+     }
+     else
+     {
+        vTaskDelay(10);
+     }
    }
 }
-TaskHandle_t xUART_task_2_Handle=NULL;
 
-void UART_task_2 (void *pvParameters)
+TaskHandle_t xPb_2_Handle=NULL;
+
+void PbPoll_2_Task (void *pvParameters)
 {
-   uint8_t iter;
-   volatile uint16_t loadIter;
+   static uint16_t locCounter=0;
    while(1)
    {
-      if(pdTRUE==xSemaphoreTake(&mutex_UartBuffer,500))
-      {
-         for(iter=0;iter<10;iter++)
-         {
-             str_uartBuffer[u16_elementsInBuffer++]=(uint8_t *)"Task 2 String";
-             for(loadIter=0;loadIter<100000;loadIter++);
-         }
-         xSemaphoreGive(&mutex_UartBuffer);
-         vTaskDelay((TickType_t)500);
-      }
-      else
-      {
-         //do Nothing
-      }
+     pinState=GPIO_read(PORT_0,PIN1);
+     if((pinState==PIN_IS_HIGH)&&(locCounter==0))
+     {
+        xQueueSend(&xUartQueue, "Positive Edge Detected");
+        locCounter++;
+        vTaskDelay(10);
+     }
+     else if((pinState==PIN_IS_LOW)&&(locCounter!=0))
+     {
+        xQueueSend(&xUartQueue, "Negative Edge Detected");
+        locCounter=0;
+        vTaskDelay(10);
+     }
+     else
+     {
+        vTaskDelay(10);
+     }
    }
 }
+
+TaskHandle_t xPeriodicSendHandle=NULL;
+
+void PeriodicSend_Task(void *pvParameters)
+{
+   xQueueSend(&xUartQueue, "Periodic String");
+   vTaskDelay(100);
+}
+
+TaskHandle_t xConsumerTask=NULL;
+
+void Consumer_Task(void *pvParameters)
+{
+   uint8_t RxedString[100];
+   if(xQueueReceive( xUartQueue,( RxedString ),( TickType_t ) 100 ) == pdPASS)
+   {
+      //message received
+   }
+}
+
 /*-----------------------------------------------------------*/
 
 
@@ -140,15 +166,17 @@ void UART_task_2 (void *pvParameters)
  * Application entry point:
  * Starts all the other tasks, then starts the scheduler. 
  */
-int main( void )
+int main(void)
 {
 	/* Setup the hardware for use with the Keil demo board. */
 	prvSetupHardware();
-   mutex_UartBuffer=xSemaphoreCreateMutex();
+   xUartQueue=xQueueCreate(100, 20*sizeof(uint8_t));
 	
     /* Create Tasks here */
-   xTaskCreate(UART_task_1,"100 ms Task",100,(void *)(0),1,&xUART_task_1_Handle);
-   xTaskCreate(UART_task_2,"200 ms Task",100,(void *)(0),2,&xUART_task_2_Handle);
+   xTaskCreate(PbPoll_1_Task,"100 ms Task",100,(void *)(0),1,&xPb_1_Handle);
+   xTaskCreate(PbPoll_2_Task,"200 ms Task",100,(void *)(0),2,&xPb_2_Handle);
+   xTaskCreate(PeriodicSend_Task,"Periodic Send Task",100,(void *)(0),2,&xPeriodicSendHandle);
+   xTaskCreate(Consumer_Task,"Consumer Task",100,(void *)(0),2,&xConsumerTask);
 	/* Now all the tasks have been started - start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
