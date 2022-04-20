@@ -82,66 +82,55 @@
  */
 static void prvSetupHardware( void );
 
-uint16_t global_Counter=0;
+uint8_t *str_uartBuffer[2000]={0};
+uint16_t u16_elementsInBuffer;
 
+xSemaphoreHandle mutex_UartBuffer;
 
+TaskHandle_t xUART_task_1_Handle=NULL;
 
-pinState_t pinState=PIN_IS_LOW;
-
-
-xSemaphoreHandle sem_buttonReleased;
-
-
-TaskHandle_t xToggleHandle=NULL;
-
-void ledToggle(void *pvParameters)
+void UART_task_1(void *pvParameters)
 {
+   uint8_t iter;
    while(1)
    {
-      if(pdTRUE==xSemaphoreTake(&sem_buttonReleased,100))
+      if(pdTRUE==xSemaphoreTake(&mutex_UartBuffer,100))
       {
-         if(PIN_IS_HIGH==GPIO_read(PORT_0,PIN1))
+         for(iter=0;iter<10;iter++)
          {
-            GPIO_write(PORT_0,PIN1,PIN_IS_LOW);
-            vTaskDelay(100);  
+            str_uartBuffer[u16_elementsInBuffer++]=(uint8_t *)"Task 1 String";            
          }
-         else
-         {
-            GPIO_write(PORT_0,PIN1,PIN_IS_HIGH);
-            vTaskDelay(100);  
-         }         
-         }
+         xSemaphoreGive(&mutex_UartBuffer);
+         vTaskDelay((TickType_t)100);
+      }
       else
       {
          //do Nothing
       }
    }
 }
-TaskHandle_t xPbHandle=NULL;
+TaskHandle_t xUART_task_2_Handle=NULL;
 
-void PbPoll_Task (void *pvParameters)
+void UART_task_2 (void *pvParameters)
 {
-   static uint16_t locCounter=0;
+   uint8_t iter;
+   volatile uint16_t loadIter;
    while(1)
    {
-     pinState=GPIO_read(PORT_0,PIN0);
-     if(pinState==PIN_IS_HIGH)
-     {
-        locCounter++;
-        vTaskDelay(10);
-     }
-     else
-     {
-        if(locCounter==0)
-        {
-           vTaskDelay(10);
-        }
-        else
-        {
-           xSemaphoreGive(&sem_buttonReleased);
-           locCounter=0;
-        }
-     }
+      if(pdTRUE==xSemaphoreTake(&mutex_UartBuffer,500))
+      {
+         for(iter=0;iter<10;iter++)
+         {
+             str_uartBuffer[u16_elementsInBuffer++]=(uint8_t *)"Task 2 String";
+             for(loadIter=0;loadIter<100000;loadIter++);
+         }
+         xSemaphoreGive(&mutex_UartBuffer);
+         vTaskDelay((TickType_t)500);
+      }
+      else
+      {
+         //do Nothing
+      }
    }
 }
 /*-----------------------------------------------------------*/
@@ -155,11 +144,11 @@ int main( void )
 {
 	/* Setup the hardware for use with the Keil demo board. */
 	prvSetupHardware();
-   sem_buttonReleased=xSemaphoreCreateBinary();
+   mutex_UartBuffer=xSemaphoreCreateMutex();
 	
     /* Create Tasks here */
-   xTaskCreate(ledToggle,"Toggle Led",20,(void *)(0),1,&xToggleHandle);
-   xTaskCreate(PbPoll_Task,"Push Button Poll Task",100,(void *)(0),2,&xPbHandle);
+   xTaskCreate(UART_task_1,"100 ms Task",100,(void *)(0),1,&xUART_task_1_Handle);
+   xTaskCreate(UART_task_2,"200 ms Task",100,(void *)(0),2,&xUART_task_2_Handle);
 	/* Now all the tasks have been started - start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
