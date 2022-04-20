@@ -155,7 +155,7 @@ int main( void )
 {
 	/* Setup the hardware for use with the Keil demo board. */
 	prvSetupHardware();
-
+   sem_buttonReleased=xSemaphoreCreateBinary();
 	
     /* Create Tasks here */
    xTaskCreate(ledToggle,"Toggle Led",20,(void *)(0),1,&xToggleHandle);

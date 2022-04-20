@@ -29,11 +29,17 @@ Project File Date:  04/18/2022
 Build target 'RTOSDemo_THUMB'
 compiling main.c...
 Starter Files\Starter_Files_V0\source\main.c(92): error:  #20: identifier "SemaphoreHandle_t" is undefined
-  xSemaphoreHandle button;
-Starter Files\Starter_Files_V0\source\main.c: 0 warnings, 1 error
-".\bin\RTOSDemo.axf" - 1 Error(s), 0 Warning(s).
+  xSemaphoreHandle sem_buttonReleased;
+Starter Files\Starter_Files_V0\source\main.c(101): warning:  #223-D: function "xSemaphoreTake" declared implicitly
+        if(pdTRUE==xSemaphoreTake(&sem_buttonReleased,100))
+Starter Files\Starter_Files_V0\source\main.c(141): warning:  #223-D: function "xSemaphoreGive" declared implicitly
+             xSemaphoreGive(&sem_buttonReleased);
+Starter Files\Starter_Files_V0\source\main.c(158): warning:  #223-D: function "xSemaphoreCreateBinary" declared implicitly
+     sem_buttonReleased=xSemaphoreCreateBinary();
+Starter Files\Starter_Files_V0\source\main.c: 3 warnings, 1 error
+".\bin\RTOSDemo.axf" - 1 Error(s), 3 Warning(s).
 Target not created.
-Build Time Elapsed:  00:00:01
+Build Time Elapsed:  00:00:03
 </pre>
 </body>
 </html>
