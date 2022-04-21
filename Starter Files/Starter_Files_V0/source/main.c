@@ -59,6 +59,7 @@
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "lpc21xx.h"
 
 /* Peripheral includes. */
@@ -80,9 +81,10 @@
  * minimal as most of the setup is managed by the settings in the project
  * file.
  */
+
 static void prvSetupHardware( void );
 
-uint8_t *str_uartBuffer[2000]={0};
+uint8_t *str_uartBuffer[200]={0};
 uint16_t u16_elementsInBuffer;
 
 xSemaphoreHandle mutex_UartBuffer;
@@ -94,7 +96,7 @@ void UART_task_1(void *pvParameters)
    uint8_t iter;
    while(1)
    {
-      if(pdTRUE==xSemaphoreTake(&mutex_UartBuffer,100))
+      if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,100))
       {
          for(iter=0;iter<10;iter++)
          {
@@ -117,7 +119,7 @@ void UART_task_2 (void *pvParameters)
    volatile uint16_t loadIter;
    while(1)
    {
-      if(pdTRUE==xSemaphoreTake(&mutex_UartBuffer,500))
+      if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,500))
       {
          for(iter=0;iter<10;iter++)
          {
