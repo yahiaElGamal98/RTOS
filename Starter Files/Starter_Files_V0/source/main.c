@@ -61,7 +61,6 @@
 #include "task.h"
 #include "semphr.h"
 #include "lpc21xx.h"
-
 /* Peripheral includes. */
 #include "serial.h"
 #include "GPIO.h"
@@ -96,16 +95,16 @@ void UART_task_1(void *pvParameters)
    uint8_t iter;
    while(1)
    {
-      if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,100))
+     // if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,100))
       {
          for(iter=0;iter<10;iter++)
          {
             str_uartBuffer[u16_elementsInBuffer++]=(uint8_t *)"Task 1 String";            
          }
-         xSemaphoreGive(&mutex_UartBuffer);
+         //xSemaphoreGive(mutex_UartBuffer);
          vTaskDelay((TickType_t)100);
       }
-      else
+     // else
       {
          //do Nothing
       }
@@ -116,20 +115,20 @@ TaskHandle_t xUART_task_2_Handle=NULL;
 void UART_task_2 (void *pvParameters)
 {
    uint8_t iter;
-   volatile uint16_t loadIter;
+   volatile uint32_t loadIter;
    while(1)
    {
-      if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,500))
+     // if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,500))
       {
          for(iter=0;iter<10;iter++)
          {
              str_uartBuffer[u16_elementsInBuffer++]=(uint8_t *)"Task 2 String";
              for(loadIter=0;loadIter<100000;loadIter++);
          }
-         xSemaphoreGive(&mutex_UartBuffer);
+         //xSemaphoreGive(mutex_UartBuffer);
          vTaskDelay((TickType_t)500);
       }
-      else
+     // else
       {
          //do Nothing
       }
@@ -149,8 +148,8 @@ int main( void )
    mutex_UartBuffer=xSemaphoreCreateMutex();
 	
     /* Create Tasks here */
-   xTaskCreate(UART_task_1,"100 ms Task",100,(void *)(0),1,&xUART_task_1_Handle);
-   xTaskCreate(UART_task_2,"200 ms Task",100,(void *)(0),2,&xUART_task_2_Handle);
+   xTaskCreate(UART_task_1,"100 ms Task",100,(void *)(0),4,&xUART_task_1_Handle);
+   xTaskCreate(UART_task_2,"200 ms Task",100,(void *)(0),3,&xUART_task_2_Handle);
 	/* Now all the tasks have been started - start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
