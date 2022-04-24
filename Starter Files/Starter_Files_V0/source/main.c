@@ -60,7 +60,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "lpc21xx.h"
-
+#include "semphr.h"
 /* Peripheral includes. */
 #include "serial.h"
 #include "GPIO.h"
@@ -82,8 +82,6 @@
  */
 static void prvSetupHardware( void );
 
-uint16_t global_Counter=0;
-
 
 
 pinState_t pinState=PIN_IS_LOW;
@@ -98,7 +96,7 @@ void ledToggle(void *pvParameters)
 {
    while(1)
    {
-      if(pdTRUE==xSemaphoreTake(&sem_buttonReleased,100))
+      if(pdTRUE==xSemaphoreTake(sem_buttonReleased,100))
       {
          if(PIN_IS_HIGH==GPIO_read(PORT_0,PIN1))
          {
@@ -121,9 +119,10 @@ TaskHandle_t xPbHandle=NULL;
 
 void PbPoll_Task (void *pvParameters)
 {
-   static uint16_t locCounter=0;
+   
    while(1)
    {
+      static uint16_t locCounter=0;
      pinState=GPIO_read(PORT_0,PIN0);
      if(pinState==PIN_IS_HIGH)
      {
@@ -138,8 +137,9 @@ void PbPoll_Task (void *pvParameters)
         }
         else
         {
-           xSemaphoreGive(&sem_buttonReleased);
            locCounter=0;
+           xSemaphoreGive(sem_buttonReleased);
+           //sem_buttonReleased=(SemaphoreHandle_t)1;
         }
      }
    }
@@ -158,8 +158,8 @@ int main( void )
    sem_buttonReleased=xSemaphoreCreateBinary();
 	
     /* Create Tasks here */
-   xTaskCreate(ledToggle,"Toggle Led",20,(void *)(0),1,&xToggleHandle);
-   xTaskCreate(PbPoll_Task,"Push Button Poll Task",100,(void *)(0),2,&xPbHandle);
+   xTaskCreate(ledToggle,"Toggle Led",300,(void *)(0),1,&xToggleHandle);
+   xTaskCreate(PbPoll_Task,"Push Button Poll Task",300,(void *)(0),2,&xPbHandle);
 	/* Now all the tasks have been started - start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
