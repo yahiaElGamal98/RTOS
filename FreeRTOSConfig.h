@@ -60,6 +60,8 @@
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0
 #define configMAX_CO_ROUTINE_PRIORITIES ( 2 )
+#define configSUPPORT_DYNAMIC_ALLOCATION 1
+
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */

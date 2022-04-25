@@ -60,6 +60,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "lpc21xx.h"
+#include "queue.h"
+#include "semphr.h"
 
 /* Peripheral includes. */
 #include "serial.h"
@@ -96,14 +98,14 @@ void PbPoll_1_Task (void *pvParameters)
      pinState=GPIO_read(PORT_0,PIN0);
      if((pinState==PIN_IS_HIGH)&&(locCounter==0))
      {
-        xQueueSend(&xUartQueue, "Positive Edge Detected");
         locCounter++;
+        xQueueSend(xUartQueue, "Positive Edge Detected",10);
         vTaskDelay(10);
      }
      else if((pinState==PIN_IS_LOW)&&(locCounter!=0))
      {
-        xQueueSend(&xUartQueue, "Negative Edge Detected");
         locCounter=0;
+        xQueueSend(xUartQueue, "Negative Edge Detected",10);
         vTaskDelay(10);
      }
      else
@@ -123,13 +125,13 @@ void PbPoll_2_Task (void *pvParameters)
      pinState=GPIO_read(PORT_0,PIN1);
      if((pinState==PIN_IS_HIGH)&&(locCounter==0))
      {
-        xQueueSend(&xUartQueue, "Positive Edge Detected");
+        xQueueSend(xUartQueue, "Positive Edge Detected",10);
         locCounter++;
         vTaskDelay(10);
      }
      else if((pinState==PIN_IS_LOW)&&(locCounter!=0))
      {
-        xQueueSend(&xUartQueue, "Negative Edge Detected");
+        xQueueSend(xUartQueue, "Negative Edge Detected",10);
         locCounter=0;
         vTaskDelay(10);
      }
@@ -144,7 +146,7 @@ TaskHandle_t xPeriodicSendHandle=NULL;
 
 void PeriodicSend_Task(void *pvParameters)
 {
-   xQueueSend(&xUartQueue, "Periodic String");
+   xQueueSend(xUartQueue, "Periodic String",100);
    vTaskDelay(100);
 }
 
@@ -152,10 +154,11 @@ TaskHandle_t xConsumerTask=NULL;
 
 void Consumer_Task(void *pvParameters)
 {
-   uint8_t RxedString[100];
-   if(xQueueReceive( xUartQueue,( RxedString ),( TickType_t ) 100 ) == pdPASS)
+   int x=0;
+   uint8_t  RxedString[100];
+   if(xQueueReceive( xUartQueue,( RxedString ),( TickType_t ) 10 ) == pdPASS)
    {
-      //message received
+    x++;
    }
 }
 
@@ -173,10 +176,10 @@ int main(void)
    xUartQueue=xQueueCreate(100, 20*sizeof(uint8_t));
 	
     /* Create Tasks here */
-   xTaskCreate(PbPoll_1_Task,"100 ms Task",100,(void *)(0),1,&xPb_1_Handle);
-   xTaskCreate(PbPoll_2_Task,"200 ms Task",100,(void *)(0),2,&xPb_2_Handle);
-   xTaskCreate(PeriodicSend_Task,"Periodic Send Task",100,(void *)(0),2,&xPeriodicSendHandle);
-   xTaskCreate(Consumer_Task,"Consumer Task",100,(void *)(0),2,&xConsumerTask);
+   xTaskCreate(PbPoll_1_Task,"100 ms Task",500,(void *)(0),1,&xPb_1_Handle);
+   xTaskCreate(PbPoll_2_Task,"200 ms Task",500,(void *)(0),2,&xPb_2_Handle);
+   xTaskCreate(PeriodicSend_Task,"Periodic Send Task",500,(void *)(0),2,&xPeriodicSendHandle);
+   xTaskCreate(Consumer_Task,"Consumer Task",500,(void *)(0),2,&xConsumerTask);
 	/* Now all the tasks have been started - start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
