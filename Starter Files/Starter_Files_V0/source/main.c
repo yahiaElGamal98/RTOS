@@ -85,6 +85,10 @@
 static void prvSetupHardware( void );
 
 pinState_t pinState=PIN_IS_LOW;
+pinState_t pinState_2=PIN_IS_LOW;
+
+uint8_t *str_uartBuffer[200]={0};
+uint16_t u16_elementsInBuffer=0;
 
 xQueueHandle xUartQueue;
 
@@ -122,14 +126,14 @@ void PbPoll_2_Task (void *pvParameters)
    static uint16_t locCounter=0;
    while(1)
    {
-     pinState=GPIO_read(PORT_0,PIN1);
-     if((pinState==PIN_IS_HIGH)&&(locCounter==0))
+     pinState_2=GPIO_read(PORT_0,PIN1);
+     if((pinState_2==PIN_IS_HIGH)&&(locCounter==0))
      {
         xQueueSend(xUartQueue, "Positive Edge Detected",10);
         locCounter++;
         vTaskDelay(10);
      }
-     else if((pinState==PIN_IS_LOW)&&(locCounter!=0))
+     else if((pinState_2==PIN_IS_LOW)&&(locCounter!=0))
      {
         xQueueSend(xUartQueue, "Negative Edge Detected",10);
         locCounter=0;
@@ -154,11 +158,9 @@ TaskHandle_t xConsumerTask=NULL;
 
 void Consumer_Task(void *pvParameters)
 {
-   int x=0;
-   uint8_t  RxedString[100];
-   if(xQueueReceive( xUartQueue,( RxedString ),( TickType_t ) 10 ) == pdPASS)
+   if(xQueueReceive( xUartQueue,&str_uartBuffer[u16_elementsInBuffer] ,( TickType_t ) 10 ) == pdPASS)
    {
-    x++;
+      u16_elementsInBuffer++;
    }
 }
 
@@ -176,10 +178,10 @@ int main(void)
    xUartQueue=xQueueCreate(100, 20*sizeof(uint8_t));
 	
     /* Create Tasks here */
-   xTaskCreate(PbPoll_1_Task,"100 ms Task",500,(void *)(0),1,&xPb_1_Handle);
-   xTaskCreate(PbPoll_2_Task,"200 ms Task",500,(void *)(0),2,&xPb_2_Handle);
-   xTaskCreate(PeriodicSend_Task,"Periodic Send Task",500,(void *)(0),2,&xPeriodicSendHandle);
-   xTaskCreate(Consumer_Task,"Consumer Task",500,(void *)(0),2,&xConsumerTask);
+   xTaskCreate(PbPoll_1_Task,"100 ms Task",1000,(void *)(0),1,&xPb_1_Handle);
+   xTaskCreate(PbPoll_2_Task,"200 ms Task",1000,(void *)(0),2,&xPb_2_Handle);
+   xTaskCreate(PeriodicSend_Task,"Periodic Send Task",1000,(void *)(0),2,&xPeriodicSendHandle);
+   xTaskCreate(Consumer_Task,"Consumer Task",1000,(void *)(0),2,&xConsumerTask);
 	/* Now all the tasks have been started - start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
