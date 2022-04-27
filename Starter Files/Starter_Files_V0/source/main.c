@@ -83,8 +83,6 @@
 
 static void prvSetupHardware( void );
 
-uint8_t *str_uartBuffer[200]={0};
-uint16_t u16_elementsInBuffer;
 
 xSemaphoreHandle mutex_UartBuffer;
 
@@ -95,16 +93,17 @@ void UART_task_1(void *pvParameters)
    uint8_t iter;
    while(1)
    {
-     // if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,100))
+     if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,100))
       {
          for(iter=0;iter<10;iter++)
          {
-            str_uartBuffer[u16_elementsInBuffer++]=(uint8_t *)"Task 1 String";            
+           vSerialPutString((signed char *)"Task 1 String\n",15);
+           vTaskDelay(2);
          }
-         //xSemaphoreGive(mutex_UartBuffer);
+         xSemaphoreGive(mutex_UartBuffer);
          vTaskDelay((TickType_t)100);
       }
-     // else
+      else
       {
          //do Nothing
       }
@@ -118,17 +117,17 @@ void UART_task_2 (void *pvParameters)
    volatile uint32_t loadIter;
    while(1)
    {
-     // if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,500))
+     if(pdTRUE==xSemaphoreTake(mutex_UartBuffer,500))
       {
          for(iter=0;iter<10;iter++)
          {
-             str_uartBuffer[u16_elementsInBuffer++]=(uint8_t *)"Task 2 String";
+             vSerialPutString((signed char *)"Task 2 String\n",15);
              for(loadIter=0;loadIter<100000;loadIter++);
          }
-         //xSemaphoreGive(mutex_UartBuffer);
+         xSemaphoreGive(mutex_UartBuffer);
          vTaskDelay((TickType_t)500);
       }
-     // else
+      else
       {
          //do Nothing
       }
@@ -146,6 +145,7 @@ int main( void )
 	/* Setup the hardware for use with the Keil demo board. */
 	prvSetupHardware();
    mutex_UartBuffer=xSemaphoreCreateMutex();
+   
 	
     /* Create Tasks here */
    xTaskCreate(UART_task_1,"100 ms Task",100,(void *)(0),4,&xUART_task_1_Handle);
