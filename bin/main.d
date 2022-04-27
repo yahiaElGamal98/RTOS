@@ -17,3 +17,4 @@
 .\bin\main.o: ..\..\Source\include\semphr.h
 .\bin\main.o: ..\Common\include\serial.h
 .\bin\main.o: .\Starter Files\Starter_Files_V0\header\GPIO.h
+.\bin\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h

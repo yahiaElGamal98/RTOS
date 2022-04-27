@@ -67,6 +67,9 @@
 #include "serial.h"
 #include "GPIO.h"
 
+/* String library*/
+#include <string.h>
+
 
 /*-----------------------------------------------------------*/
 
@@ -87,8 +90,6 @@ static void prvSetupHardware( void );
 pinState_t pinState=PIN_IS_LOW;
 pinState_t pinState_2=PIN_IS_LOW;
 
-uint8_t *str_uartBuffer[200]={0};
-uint16_t u16_elementsInBuffer=0;
 
 xQueueHandle xUartQueue;
 
@@ -158,9 +159,11 @@ TaskHandle_t xConsumerTask=NULL;
 
 void Consumer_Task(void *pvParameters)
 {
-   if(xQueueReceive( xUartQueue,&str_uartBuffer[u16_elementsInBuffer] ,( TickType_t ) 10 ) == pdPASS)
+   char RxedMessaged[30];
+   if(xQueueReceive( xUartQueue,RxedMessaged ,( TickType_t ) 10 ) == pdPASS)
    {
-      u16_elementsInBuffer++;
+      vSerialPutString((signed char *)RxedMessaged,strlen(RxedMessaged));
+      vTaskDelay(2);
    }
 }
 
@@ -180,8 +183,8 @@ int main(void)
     /* Create Tasks here */
    xTaskCreate(PbPoll_1_Task,"100 ms Task",1000,(void *)(0),1,&xPb_1_Handle);
    xTaskCreate(PbPoll_2_Task,"200 ms Task",1000,(void *)(0),2,&xPb_2_Handle);
-   xTaskCreate(PeriodicSend_Task,"Periodic Send Task",1000,(void *)(0),2,&xPeriodicSendHandle);
-   xTaskCreate(Consumer_Task,"Consumer Task",1000,(void *)(0),2,&xConsumerTask);
+   xTaskCreate(PeriodicSend_Task,"Periodic Send Task",1000,(void *)(0),3,&xPeriodicSendHandle);
+   xTaskCreate(Consumer_Task,"Consumer Task",1000,(void *)(0),4,&xConsumerTask);
 	/* Now all the tasks have been started - start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
