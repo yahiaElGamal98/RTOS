@@ -168,7 +168,7 @@ void Consumer_Task(void *pvParameters)
    if(xQueueReceive( xUartQueue,RxedMessaged ,( TickType_t ) 10 ) == pdPASS)
    {
       vSerialPutString((signed char *)RxedMessaged,strlen(RxedMessaged));
-      vTaskDelay(2);
+      vTaskDelay(10);
    }
    }
 }
