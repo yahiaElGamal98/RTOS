@@ -105,17 +105,17 @@ void PbPoll_1_Task (void *pvParameters)
      {
         locCounter++;
         xQueueSend(xUartQueue, "Positive Edge Detected 1\n",10);
-        vTaskDelay(10);
+        vTaskDelay(20);
      }
      else if((pinState==PIN_IS_LOW)&&(locCounter!=0))
      {
         locCounter=0;
         xQueueSend(xUartQueue, "Negative Edge Detected 1\n",10);
-        vTaskDelay(10);
+        vTaskDelay(20);
      }
      else
      {
-        vTaskDelay(10);
+        vTaskDelay(20);
      }
    }
 }
@@ -132,17 +132,17 @@ void PbPoll_2_Task (void *pvParameters)
      {
         xQueueSend(xUartQueue, "Positive Edge Detected 2\n",10);
         locCounter++;
-        vTaskDelay(10);
+        vTaskDelay(20);
      }
      else if((pinState_2==PIN_IS_LOW)&&(locCounter!=0))
      {
         xQueueSend(xUartQueue, "Negative Edge Detected 2\n",10);
         locCounter=0;
-        vTaskDelay(10);
+        vTaskDelay(20);
      }
      else
      {
-        vTaskDelay(10);
+        vTaskDelay(20);
      }
    }
 }
@@ -187,8 +187,8 @@ int main(void)
    xUartQueue=xQueueCreate(100, 30*sizeof(uint8_t));
 	
     /* Create Tasks here */
-   xTaskCreate(PbPoll_1_Task,"100 ms Task",500,(void *)(0),1,&xPb_1_Handle);
-   xTaskCreate(PbPoll_2_Task,"200 ms Task",500,(void *)(0),2,&xPb_2_Handle);
+   xTaskCreate(PbPoll_1_Task,"Button 1 Edge detector",500,(void *)(0),1,&xPb_1_Handle);
+   xTaskCreate(PbPoll_2_Task,"Button 2 Edge detector",500,(void *)(0),2,&xPb_2_Handle);
    xTaskCreate(PeriodicSend_Task,"Periodic Send Task",500,(void *)(0),3,&xPeriodicSendHandle);
    xTaskCreate(Consumer_Task,"Consumer Task",500,(void *)(0),4,&xConsumerTask);
 	/* Now all the tasks have been started - start the scheduler.
