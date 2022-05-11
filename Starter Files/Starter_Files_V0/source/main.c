@@ -147,6 +147,7 @@ void PbPoll_Task (void *pvParameters)
         {
            global_Counter=locCounter;
            locCounter=0;
+           vTaskDelay(20);
         }
      }
    }
